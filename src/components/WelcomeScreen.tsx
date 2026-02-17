@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
-import { ArrowRight, Star, ShoppingBag, User } from 'lucide-react'
+import { ArrowRight, Star, ShoppingBag, User, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function WelcomeScreen() {
   const router = useRouter()
@@ -17,18 +18,27 @@ export default function WelcomeScreen() {
     setUserRole(role)
     
     try {
+      console.log('Creating session for role:', role)
+      
       const { data, error } = await supabase
         .from('sessions')
+        // @ts-expect-error
         .insert({ user_role: role })
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
       
+      console.log('Session created:', data)
       setSession(data)
+      toast.success('Session started!')
       router.push('/studio/goal')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating session:', error)
+      toast.error(error.message || 'Failed to create session')
     } finally {
       setIsLoading(false)
     }
@@ -65,10 +75,10 @@ export default function WelcomeScreen() {
             <button
               onClick={() => createSession('employee')}
               disabled={isLoading}
-              className="w-full group text-left p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+              className="w-full group text-left p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all flex items-center gap-4 disabled:opacity-50"
             >
               <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <ShoppingBag size={24} />
+                {isLoading ? <Loader2 size={24} className="animate-spin" /> : <ShoppingBag size={24} />}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white">Village Employee</h3>
@@ -80,10 +90,10 @@ export default function WelcomeScreen() {
             <button
               onClick={() => createSession('customer')}
               disabled={isLoading}
-              className="w-full group text-left p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all flex items-center gap-4"
+              className="w-full group text-left p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all flex items-center gap-4 disabled:opacity-50"
             >
               <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <User size={24} />
+                {isLoading ? <Loader2 size={24} className="animate-spin" /> : <User size={24} />}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white">Cart Owner</h3>

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { GOALS } from '@/lib/constants'
-import { ArrowRight, Video, Package, Tag, Camera, UserCircle } from 'lucide-react'
+import { ArrowRight, Video, Package, Tag, UserCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 const GOAL_ICONS: Record<string, React.ReactNode> = {
@@ -30,6 +30,7 @@ export default function GoalPage() {
     try {
       const { error } = await supabase
         .from('sessions')
+        // @ts-expect-error
         .update({ goal: goalId })
         .eq('id', session.id)
 

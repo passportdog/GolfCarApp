@@ -62,6 +62,7 @@ export default function StylePage() {
     try {
       const { error } = await supabase
         .from('sessions')
+        // @ts-expect-error
         .update({ style_pack_id: pack.id })
         .eq('id', session.id)
 

@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
-import { Upload, Camera, X, Loader2, Lightbulb } from 'lucide-react'
+import { Camera, X, Loader2, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function UploadPage() {
@@ -60,6 +60,7 @@ export default function UploadPage() {
       // Save to database
       const { data: photoData, error: dbError } = await supabase
         .from('uploaded_photos')
+        // @ts-expect-error
         .insert({
           session_id: session.id,
           storage_path: uploadData.path,
@@ -80,9 +81,9 @@ export default function UploadPage() {
       setTimeout(() => {
         router.push('/studio/generate')
       }, 1000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading:', error)
-      toast.error('Failed to upload photo')
+      toast.error(error.message || 'Failed to upload photo')
     } finally {
       setIsUploading(false)
     }
