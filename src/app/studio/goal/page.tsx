@@ -1,22 +1,21 @@
 'use client'
 
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { ArrowRight, Tag, Camera, Users, Wrench } from 'lucide-react'
 import { toast } from 'sonner'
-import { useEffect } from 'react'
 
-// Goal IDs must match DB constraint: social_post, inventory_photo, promo_content, personal_share
 const ROLE_GOALS = {
   employee: [
-    { id: 'inventory_photo', icon: <Tag size={20} />, title: 'New Inventory', desc: 'Showroom units & arrivals' },
-    { id: 'promo_content', icon: <Tag size={20} />, title: 'Sale / Promo', desc: 'Price drops and offers' },
-    { id: 'social_post', icon: <Wrench size={20} />, title: 'Service Special', desc: 'Maintenance promos' },
+    { id: 'inventory', icon: <Tag size={20} />, title: 'New Inventory', desc: 'Showroom units & arrivals' },
+    { id: 'sale', icon: <Tag size={20} />, title: 'Sale / Promo', desc: 'Price drops and offers' },
+    { id: 'service', icon: <Wrench size={20} />, title: 'Service Special', desc: 'Maintenance promos' },
   ],
   customer: [
-    { id: 'personal_share', icon: <Camera size={20} />, title: 'My Cart Showcase', desc: 'Show off your ride' },
-    { id: 'social_post', icon: <Users size={20} />, title: 'Community Life', desc: 'Course & neighborhood' },
+    { id: 'showcase', icon: <Camera size={20} />, title: 'My Cart Showcase', desc: 'Show off your ride' },
+    { id: 'community', icon: <Users size={20} />, title: 'Community Life', desc: 'Course & neighborhood' },
   ],
 }
 
@@ -26,36 +25,43 @@ export default function GoalPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    if (!session) router.push('/studio')
-  }, [session, router])
+    if (!session) {
+      router.push('/studio')
+    }
+  }, [router, session])
+
+  const selectGoal = useCallback(
+    async (goalId: string) => {
+      if (!session) return
+
+      try {
+        const { error } = await supabase
+          .from('sessions')
+          // @ts-expect-error Supabase Database types are not generated yet in this repo.
+          .update({
+            goal: goalId,
+            metadata: { ...(session.metadata || {}), goal_selected: goalId },
+          })
+          .eq('id', session.id)
+
+        if (error) {
+          console.error('Supabase error:', error)
+          throw error
+        }
+
+        setGoal(goalId)
+        router.push('/studio/frequency')
+      } catch (error) {
+        console.error('Error updating goal:', error)
+        toast.error('Failed to save goal. Please try again.')
+      }
+    },
+    [router, session, setGoal, supabase]
+  )
 
   if (!session) return null
 
   const goals = userRole ? ROLE_GOALS[userRole] : []
-
-  const selectGoal = async (goalId: string) => {
-    try {
-      const { error } = await supabase
-        .from('sessions')
-        // @ts-expect-error - Supabase types mismatch, runtime works correctly
-        .update({ 
-          goal: goalId,
-          metadata: { ...(session.metadata || {}), goal_selected: goalId }
-        })
-        .eq('id', session.id)
-
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-
-      setGoal(goalId)
-      router.push('/studio/frequency')
-    } catch (error) {
-      console.error('Error updating goal:', error)
-      toast.error('Failed to save goal. Please try again.')
-    }
-  }
 
   return (
     <div className="h-full w-full flex flex-col p-6 sm:p-10 max-w-2xl mx-auto">
@@ -63,7 +69,7 @@ export default function GoalPage() {
         <h2 className="text-2xl font-medium text-emerald-950 mb-2">What are we creating today?</h2>
         <p className="text-stone-500 text-sm">We&apos;ll optimize the layout for your goal.</p>
       </div>
-      
+
       <div className="space-y-3" id="goal-list">
         {goals.map((goal) => (
           <button
@@ -83,10 +89,7 @@ export default function GoalPage() {
         ))}
       </div>
 
-      <button
-        onClick={() => router.push('/studio/role')}
-        className="mt-6 text-sm text-stone-400 hover:text-stone-600"
-      >
+      <button onClick={() => router.push('/studio/role')} className="mt-6 text-sm text-stone-400 hover:text-stone-600">
         ← Back
       </button>
     </div>
