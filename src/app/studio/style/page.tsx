@@ -5,21 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { StylePack } from '@/lib/types'
-import { ArrowRight, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowRight, Sparkles, Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
-const PACK_EMOJIS: Record<string, string> = {
-  'showroom-clean': '✨',
-  'fairway-lifestyle': '⛳',
-  'neighborhood-ready': '🏡',
-  'inventory-lineup': '📋',
-}
-
 const PACK_IMAGES: Record<string, string> = {
-  'showroom-clean': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=600&auto=format&fit=crop',
-  'fairway-lifestyle': 'https://images.unsplash.com/photo-1593111774644-6eb7e8f20e58?w=600&auto=format&fit=crop',
-  'neighborhood-ready': 'https://images.unsplash.com/photo-1605218427306-022ba6c5544c?w=600&auto=format&fit=crop',
-  'inventory-lineup': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&auto=format&fit=crop',
+  'showroom-clean': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg',
+  'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=600&auto=format&fit=crop',
+  'neighborhood-ready': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg',
+  'inventory-lineup': '', // Will use placeholder
 }
 
 export default function StylePage() {
@@ -69,7 +62,7 @@ export default function StylePage() {
       if (error) throw error
 
       setSelectedPack(pack)
-      router.push('/studio/upload')
+      router.push('/studio/brand')
     } catch (error) {
       console.error('Error updating style pack:', error)
       toast.error('Failed to save style pack')
@@ -85,62 +78,57 @@ export default function StylePage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col p-6 sm:p-8">
-      <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles size={20} className="text-emerald-600" />
-            <h1 className="text-2xl font-semibold text-emerald-950">
-              Choose a Style Pack
-            </h1>
-          </div>
-          <p className="text-stone-500 text-sm">
-            Select the vibe for your content.
-          </p>
+    <div className="h-full w-full flex flex-col p-6 sm:p-10 w-full">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles size={20} className="text-emerald-600" />
+          <h2 className="text-2xl font-medium text-emerald-950">Choose a Style Pack</h2>
         </div>
+        <p className="text-stone-500 text-sm mt-1">Select the vibe for this batch of content.</p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto no-scrollbar pb-4 flex-1">
-          {packs.map((pack) => (
-            <button
-              key={pack.id}
-              onClick={() => selectPack(pack)}
-              className="group text-left rounded-xl overflow-hidden bg-white border border-stone-200 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-900/5 transition-all"
-            >
-              <div className="aspect-video bg-stone-100 relative overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto no-scrollbar pb-20">
+        {packs.map((pack) => (
+          <button
+            key={pack.id}
+            onClick={() => selectPack(pack)}
+            className="group cursor-pointer bg-white rounded-xl overflow-hidden border border-stone-200 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-900/5 transition-all text-left"
+          >
+            <div className="aspect-[16/9] bg-stone-100 relative overflow-hidden">
+              {PACK_IMAGES[pack.slug] ? (
                 <img
-                  src={PACK_IMAGES[pack.slug] || PACK_IMAGES['showroom-clean']}
+                  src={PACK_IMAGES[pack.slug]}
                   alt={pack.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <div className="absolute bottom-3 left-3 text-2xl">
-                  {PACK_EMOJIS[pack.slug] || '✨'}
+              ) : (
+                <div className="w-full h-full bg-stone-100 flex items-center justify-center">
+                  <div className="grid grid-cols-2 gap-1 opacity-20 transform -rotate-12">
+                    <div className="w-12 h-16 bg-black rounded"></div>
+                    <div className="w-12 h-16 bg-black rounded"></div>
+                    <div className="w-12 h-16 bg-black rounded"></div>
+                    <div className="w-12 h-16 bg-black rounded"></div>
+                  </div>
                 </div>
+              )}
+            </div>
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-semibold text-stone-900">{pack.name}</h3>
+                <Check size={16} className="text-emerald-600 opacity-0 group-hover:opacity-100" />
               </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold text-stone-900">{pack.name}</h3>
-                  <ArrowRight
-                    size={16}
-                    className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                  />
-                </div>
-                <p className="text-xs text-stone-500 line-clamp-2">
-                  {pack.description}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Back Button */}
-        <button
-          onClick={() => router.push('/studio/goal')}
-          className="mt-4 text-sm text-stone-400 hover:text-stone-600"
-        >
-          ← Back
-        </button>
+              <p className="text-xs text-stone-500">{pack.description}</p>
+            </div>
+          </button>
+        ))}
       </div>
+
+      <button
+        onClick={() => router.push('/studio/frequency')}
+        className="mt-4 text-sm text-stone-400 hover:text-stone-600"
+      >
+        ← Back
+      </button>
     </div>
   )
 }
