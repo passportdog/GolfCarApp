@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
@@ -19,40 +19,47 @@ export default function FrequencyPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    if (!session) router.push('/studio')
-  }, [session, router])
+    if (!session) {
+      router.push('/studio')
+    }
+  }, [router, session])
+
+  const selectFrequency = useCallback(
+    async (freqId: string) => {
+      if (!session) return
+
+      try {
+        const { error } = await supabase
+          .from('sessions')
+          // @ts-expect-error Supabase Database types are not generated yet in this repo.
+          .update({
+            metadata: {
+              ...(session.metadata || {}),
+              frequency: freqId,
+            },
+          })
+          .eq('id', session.id)
+
+        if (error) {
+          console.error('Supabase error:', error)
+          throw error
+        }
+
+        router.push('/studio/style')
+      } catch (error) {
+        console.error('Error updating frequency:', error)
+        toast.error('Failed to save frequency')
+      }
+    },
+    [router, session, supabase]
+  )
 
   if (!session) return null
-
-  const selectFrequency = async (freqId: string) => {
-    try {
-      const { error } = await supabase
-        .from('sessions')
-        // @ts-expect-error - Supabase types mismatch, runtime works correctly
-        .update({ 
-          metadata: { 
-            ...(session.metadata || {}), 
-            frequency: freqId 
-          }
-        })
-        .eq('id', session.id)
-
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-
-      router.push('/studio/style')
-    } catch (error) {
-      console.error('Error updating frequency:', error)
-      toast.error('Failed to save frequency')
-    }
-  }
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-6 max-w-lg mx-auto">
       <h2 className="text-2xl font-medium text-emerald-950 mb-8 text-center">How often do you post?</h2>
-      
+
       <div className="w-full space-y-3">
         {FREQUENCIES.map((freq) => (
           <button
@@ -66,10 +73,7 @@ export default function FrequencyPage() {
         ))}
       </div>
 
-      <button
-        onClick={() => router.push('/studio/goal')}
-        className="mt-6 text-sm text-stone-400 hover:text-stone-600"
-      >
+      <button onClick={() => router.push('/studio/goal')} className="mt-6 text-sm text-stone-400 hover:text-stone-600">
         ← Back
       </button>
     </div>

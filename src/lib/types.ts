@@ -1,12 +1,22 @@
 export interface Session {
   id: string
   user_role: 'employee' | 'customer' | null
-  goal: 'social_post' | 'inventory_photo' | 'promo_content' | 'personal_share' | null
+  goal:
+    | 'social_post'
+    | 'inventory_photo'
+    | 'promo_content'
+    | 'personal_share'
+    | 'inventory'
+    | 'sale'
+    | 'service'
+    | 'showcase'
+    | 'community'
+    | null
   style_pack_id: string | null
   village_name: string | null
   device_id: string | null
-  metadata: Record<string, any>
-  started_at: string
+  metadata: Record<string, unknown>
+  created_at: string
   completed_at: string | null
 }
 
@@ -61,7 +71,7 @@ export interface Generation {
   status: 'pending' | 'generating' | 'completed' | 'failed'
   result_url: string | null
   error_message: string | null
-  started_at: string
+  created_at: string
   completed_at: string | null
   generation_time_ms: number | null
 }

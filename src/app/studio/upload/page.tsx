@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
-import { Camera, X, Loader2, Lightbulb, ArrowRight, Sparkles } from 'lucide-react'
+import { Camera, Loader2, Lightbulb, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function UploadPage() {
@@ -55,7 +55,7 @@ export default function UploadPage() {
 
       const { data: photoData, error: dbError } = await supabase
         .from('uploaded_photos')
-        // @ts-expect-error - Supabase types mismatch, runtime works correctly
+        // @ts-expect-error Supabase Database types are not generated yet in this repo.
         .insert({
           session_id: session.id,
           storage_path: uploadData.path,
@@ -76,9 +76,10 @@ export default function UploadPage() {
       setTimeout(() => {
         router.push('/studio/generate')
       }, 600)
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upload photo'
       console.error('Error uploading:', error)
-      toast.error(error.message || 'Failed to upload photo')
+      toast.error(message)
       setPreview(null)
     } finally {
       setIsUploading(false)

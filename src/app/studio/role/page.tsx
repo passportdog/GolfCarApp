@@ -20,7 +20,7 @@ export default function RolePage() {
     try {
       const { data, error } = await supabase
         .from('sessions')
-        // @ts-expect-error - Supabase types mismatch, runtime works correctly
+        // @ts-expect-error Supabase Database types are not generated yet in this repo.
         .insert({ user_role: role })
         .select()
         .single()
@@ -29,9 +29,10 @@ export default function RolePage() {
       
       setSession(data)
       router.push('/studio/goal')
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create session'
       console.error('Error creating session:', error)
-      toast.error(error.message || 'Failed to create session')
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }

@@ -1,18 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { StylePack } from '@/lib/types'
-import { ArrowRight, Sparkles, Loader2, Check } from 'lucide-react'
+import { Sparkles, Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
-const PACK_IMAGES: Record<string, string> = {
-  'showroom-clean': 'https://images.unsplash.com/photo-1593111774648-63562bf86e78?w=800&auto=format&fit=crop&q=80',
-  'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=800&auto=format&fit=crop&q=80',
-  'neighborhood-ready': 'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=800&auto=format&fit=crop&q=80',
-  'inventory-lineup': 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=800&auto=format&fit=crop&q=80',
+const PACK_IMAGES: Record<string, string | null> = {
+  'showroom-clean': 'https://images.unsplash.com/photo-1622227922682-56c92e523e86?w=1200&auto=format&fit=crop',
+  'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=1200&auto=format&fit=crop',
+  'neighborhood-ready': 'https://images.unsplash.com/photo-1614983646439-2f3f3f5f5bdf?w=1200&auto=format&fit=crop',
+  'inventory-lineup': null,
 }
 
 export default function StylePage() {
@@ -22,22 +22,9 @@ export default function StylePage() {
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
-  useEffect(() => {
-    if (!session) {
-      router.push('/studio')
-      return
-    }
-    fetchStylePacks()
-  }, [session, router])
-
-  const fetchStylePacks = async () => {
-    if (!session) return
+  const fetchStylePacks = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('style_packs')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order')
+      const { data, error } = await supabase.from('style_packs').select('*').eq('is_active', true).order('sort_order')
 
       if (error) throw error
 
@@ -49,14 +36,24 @@ export default function StylePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [setStylePacks, supabase])
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/studio')
+      return
+    }
+
+    fetchStylePacks()
+  }, [fetchStylePacks, router, session])
 
   const selectPack = async (pack: StylePack) => {
     if (!session) return
+
     try {
       const { error } = await supabase
         .from('sessions')
-        // @ts-expect-error - Supabase types mismatch, runtime works correctly
+        // @ts-expect-error Supabase Database types are not generated yet in this repo.
         .update({ style_pack_id: pack.id })
         .eq('id', session.id)
 
@@ -70,7 +67,9 @@ export default function StylePage() {
     }
   }
 
-  if (isLoading || !session) {
+  if (!session) return null
+
+  if (isLoading) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-emerald-600" />
@@ -98,15 +97,13 @@ export default function StylePage() {
             <div className="aspect-[16/9] bg-stone-100 relative overflow-hidden">
               {PACK_IMAGES[pack.slug] ? (
                 <img
-                  src={PACK_IMAGES[pack.slug]}
+                  src={PACK_IMAGES[pack.slug] as string}
                   alt={pack.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               ) : (
-                <div className="w-full h-full bg-stone-100 flex items-center justify-center">
-                  <span className="text-4xl" role="img" aria-label={pack.name}>
-                    {pack.icon_emoji || '✨'}
-                  </span>
+                <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-stone-200 flex items-center justify-center text-5xl">
+                  🛺
                 </div>
               )}
             </div>
@@ -121,10 +118,7 @@ export default function StylePage() {
         ))}
       </div>
 
-      <button
-        onClick={() => router.push('/studio/frequency')}
-        className="mt-4 text-sm text-stone-400 hover:text-stone-600"
-      >
+      <button onClick={() => router.push('/studio/frequency')} className="mt-4 text-sm text-stone-400 hover:text-stone-600">
         ← Back
       </button>
     </div>

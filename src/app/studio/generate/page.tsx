@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { GolfCartIcon } from '@/components/icons'
@@ -18,14 +18,7 @@ export default function GeneratePage() {
   const router = useRouter()
   const { session, selectedPack, uploadedPhoto, setGeneration } = useStudio()
   const [messageIndex, setMessageIndex] = useState(0)
-
-  useEffect(() => {
-    if (!session) {
-      router.push('/studio')
-      return
-    }
-    generateImage()
-  }, [session, router])
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,17 +27,19 @@ export default function GeneratePage() {
     return () => clearInterval(interval)
   }, [])
 
-  const generateImage = async () => {
-    if (!session) return
-    try {
-      // Call the edge function — uploadedPhoto is optional (null for first-time browse)
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-image`,
-        {
+  useEffect(() => {
+    if (!session) {
+      router.push('/studio')
+      return
+    }
+
+    const generateImage = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-image`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
             session_id: session.id,
@@ -53,55 +48,63 @@ export default function GeneratePage() {
             selected_option_ids: [],
             quality: 'basic',
           }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to start generation')
         }
-      )
 
-      if (!response.ok) {
-        throw new Error('Failed to start generation')
-      }
+        const { generation_id } = await response.json()
 
-      const { generation_id } = await response.json()
-
-      const pollInterval = setInterval(async () => {
-        try {
-          const checkResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/check-generation`,
-            {
+        pollRef.current = setInterval(async () => {
+          try {
+            const checkResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/check-generation`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
               },
               body: JSON.stringify({ generation_id }),
+            })
+
+            if (!checkResponse.ok) {
+              throw new Error('Failed to check generation status')
             }
-          )
 
-          if (!checkResponse.ok) {
-            throw new Error('Failed to check generation status')
+            const gen = await checkResponse.json()
+
+            if (gen.status === 'completed') {
+              if (pollRef.current) {
+                clearInterval(pollRef.current)
+              }
+              setGeneration(gen)
+              router.push('/studio/results')
+            } else if (gen.status === 'failed') {
+              if (pollRef.current) {
+                clearInterval(pollRef.current)
+              }
+              toast.error(gen.error_message || 'Generation failed')
+              router.push('/studio/brand')
+            }
+          } catch (error) {
+            console.error('Error polling:', error)
           }
-
-          const gen = await checkResponse.json()
-
-          if (gen.status === 'completed') {
-            clearInterval(pollInterval)
-            setGeneration(gen)
-            router.push('/studio/results')
-          } else if (gen.status === 'failed') {
-            clearInterval(pollInterval)
-            toast.error(gen.error_message || 'Generation failed')
-            router.push('/studio/brand')
-          }
-        } catch (error) {
-          console.error('Error polling:', error)
-        }
-      }, 3000)
-
-      return () => clearInterval(pollInterval)
-    } catch (error) {
-      console.error('Error generating:', error)
-      toast.error('Failed to start generation')
+        }, 3000)
+      } catch (error) {
+        console.error('Error generating:', error)
+        toast.error('Failed to start generation')
+        router.push('/studio/brand')
+      }
     }
-  }
+
+    generateImage()
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+      }
+    }
+  }, [router, selectedPack?.id, session, setGeneration, uploadedPhoto?.id])
 
   if (!session) return null
 
@@ -114,10 +117,8 @@ export default function GeneratePage() {
       </div>
 
       <h2 className="text-xl font-medium text-emerald-950 mb-2">Building your Village Pack...</h2>
-      <p className="text-stone-500 text-sm animate-pulse">
-        {LOADING_MESSAGES[messageIndex]}
-      </p>
-      
+      <p className="text-stone-500 text-sm animate-pulse">{LOADING_MESSAGES[messageIndex]}</p>
+
       <div className="mt-12 flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-100 shadow-sm">
         <div className="flex -space-x-2">
           <div className="w-6 h-6 rounded-full bg-stone-200 border border-white" />
