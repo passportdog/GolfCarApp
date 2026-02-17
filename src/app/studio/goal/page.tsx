@@ -32,19 +32,26 @@ export default function GoalPage() {
 
   const selectGoal = async (goalId: string) => {
     try {
+      // Update metadata with goal
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error
-        .update({ goal: goalId })
+        .update({ 
+          goal: goalId,
+          metadata: { ...(session.metadata || {}), goal_selected: goalId }
+        })
         .eq('id', session.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       setGoal(goalId)
       router.push('/studio/frequency')
     } catch (error) {
       console.error('Error updating goal:', error)
-      toast.error('Failed to save goal')
+      toast.error('Failed to save goal. Please try again.')
     }
   }
 

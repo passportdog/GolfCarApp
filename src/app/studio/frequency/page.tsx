@@ -24,13 +24,22 @@ export default function FrequencyPage() {
 
   const selectFrequency = async (freqId: string) => {
     try {
+      // Store frequency in metadata
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error
-        .update({ frequency: freqId })
+        .update({ 
+          metadata: { 
+            ...(session.metadata || {}), 
+            frequency: freqId 
+          }
+        })
         .eq('id', session.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       router.push('/studio/style')
     } catch (error) {

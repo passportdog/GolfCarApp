@@ -32,17 +32,24 @@ export default function BrandPage() {
   const handleContinue = async () => {
     setIsLoading(true)
     try {
+      // Store brand details in metadata
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error
         .update({ 
-          location,
-          cta,
-          promo: userRole === 'employee' ? promo : null,
+          metadata: {
+            ...(session.metadata || {}),
+            location,
+            cta,
+            promo: userRole === 'employee' ? promo : null,
+          }
         })
         .eq('id', session.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       router.push('/studio/upload')
     } catch (error) {
@@ -127,7 +134,7 @@ export default function BrandPage() {
           disabled={isLoading}
           className="w-full h-12 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-medium transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2"
         >
-          {isLoading ? <Loader2 size={20} className="animate-spin" /> : 'Generate Content'}
+          {isLoading ? <Loader2 size={20} className="animate-spin" /> : 'Continue to Upload'}
         </button>
       </div>
 
