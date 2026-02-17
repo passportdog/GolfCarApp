@@ -20,7 +20,7 @@ export default function RolePage() {
     try {
       const { data, error } = await supabase
         .from('sessions')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .insert({ user_role: role })
         .select()
         .single()
@@ -38,7 +38,7 @@ export default function RolePage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-6 sm:p-12 w-full max-w-3xl mx-auto">
+    <div className="h-full w-full flex flex-col items-center justify-center p-6 sm:p-12 max-w-3xl mx-auto">
       <div className="text-center mb-10">
         <h2 className="text-2xl font-medium text-emerald-950 mb-2">How are you using the Studio?</h2>
         <p className="text-stone-500 text-sm">Select your role to unlock the right templates.</p>

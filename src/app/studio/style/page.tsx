@@ -9,10 +9,10 @@ import { ArrowRight, Sparkles, Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
 const PACK_IMAGES: Record<string, string> = {
-  'showroom-clean': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg',
-  'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=600&auto=format&fit=crop',
-  'neighborhood-ready': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg',
-  'inventory-lineup': '',
+  'showroom-clean': 'https://images.unsplash.com/photo-1593111774648-63562bf86e78?w=800&auto=format&fit=crop&q=80',
+  'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=800&auto=format&fit=crop&q=80',
+  'neighborhood-ready': 'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=800&auto=format&fit=crop&q=80',
+  'inventory-lineup': 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=800&auto=format&fit=crop&q=80',
 }
 
 export default function StylePage() {
@@ -56,7 +56,7 @@ export default function StylePage() {
     try {
       const { error } = await supabase
         .from('sessions')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .update({ style_pack_id: pack.id })
         .eq('id', session.id)
 
@@ -79,7 +79,7 @@ export default function StylePage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col p-6 sm:p-10 w-full">
+    <div className="h-full w-full flex flex-col p-6 sm:p-10">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles size={20} className="text-emerald-600" />
@@ -104,12 +104,9 @@ export default function StylePage() {
                 />
               ) : (
                 <div className="w-full h-full bg-stone-100 flex items-center justify-center">
-                  <div className="grid grid-cols-2 gap-1 opacity-20 transform -rotate-12">
-                    <div className="w-12 h-16 bg-black rounded"></div>
-                    <div className="w-12 h-16 bg-black rounded"></div>
-                    <div className="w-12 h-16 bg-black rounded"></div>
-                    <div className="w-12 h-16 bg-black rounded"></div>
-                  </div>
+                  <span className="text-4xl" role="img" aria-label={pack.name}>
+                    {pack.icon_emoji || '✨'}
+                  </span>
                 </div>
               )}
             </div>

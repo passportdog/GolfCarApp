@@ -55,7 +55,7 @@ export default function UploadPage() {
 
       const { data: photoData, error: dbError } = await supabase
         .from('uploaded_photos')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .insert({
           session_id: session.id,
           storage_path: uploadData.path,

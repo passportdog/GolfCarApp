@@ -28,7 +28,7 @@ export default function FrequencyPage() {
     try {
       const { error } = await supabase
         .from('sessions')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .update({ 
           metadata: { 
             ...(session.metadata || {}), 
@@ -50,7 +50,7 @@ export default function FrequencyPage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-6 w-full max-w-lg mx-auto">
+    <div className="h-full w-full flex flex-col items-center justify-center p-6 max-w-lg mx-auto">
       <h2 className="text-2xl font-medium text-emerald-950 mb-8 text-center">How often do you post?</h2>
       
       <div className="w-full space-y-3">

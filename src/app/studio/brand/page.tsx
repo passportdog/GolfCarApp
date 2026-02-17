@@ -6,7 +6,6 @@ import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { Lock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useState as useStateReact, useEffect as useEffectReact } from 'react'
 
 const LOCATIONS = [
   'The Villages (Main)',
@@ -19,13 +18,13 @@ const CTAS = ['Call Us', 'Text Us', 'Visit Web']
 export default function BrandPage() {
   const router = useRouter()
   const { session, userRole } = useStudio()
-  const [location, setLocation] = useStateReact(LOCATIONS[0])
-  const [cta, setCta] = useStateReact(CTAS[0])
-  const [promo, setPromo] = useStateReact('')
-  const [isLoading, setIsLoading] = useStateReact(false)
+  const [location, setLocation] = useState(LOCATIONS[0])
+  const [cta, setCta] = useState(CTAS[0])
+  const [promo, setPromo] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
-  useEffectReact(() => {
+  useEffect(() => {
     if (!session) router.push('/studio')
   }, [session, router])
 
@@ -36,7 +35,7 @@ export default function BrandPage() {
     try {
       const { error } = await supabase
         .from('sessions')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .update({ 
           metadata: {
             ...(session.metadata || {}),
@@ -63,7 +62,7 @@ export default function BrandPage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col p-6 sm:p-10 w-full">
+    <div className="h-full w-full flex flex-col p-6 sm:p-10">
       <div className="mb-6">
         <h2 className="text-2xl font-medium text-emerald-950">Village Details</h2>
         <p className="text-stone-500 text-sm">Review the info for this post.</p>

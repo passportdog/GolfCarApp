@@ -37,7 +37,7 @@ export default function GoalPage() {
     try {
       const { error } = await supabase
         .from('sessions')
-        // @ts-expect-error
+        // @ts-expect-error - Supabase types mismatch, runtime works correctly
         .update({ 
           goal: goalId,
           metadata: { ...(session.metadata || {}), goal_selected: goalId }

@@ -2,39 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useStudio } from '@/lib/context'
-import { createClient } from '@/lib/supabase'
-import { ArrowRight, Star, ShoppingBag, User, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { ArrowRight, Star, Loader2 } from 'lucide-react'
 
 export default function WelcomeScreen() {
   const router = useRouter()
-  const { setSession, setUserRole } = useStudio()
   const [isLoading, setIsLoading] = useState(false)
-  const supabase = createClient()
 
-  const createSession = async (role: 'employee' | 'customer') => {
+  const handleGetStarted = () => {
     setIsLoading(true)
-    setUserRole(role)
-    
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        // @ts-expect-error
-        .insert({ user_role: role })
-        .select()
-        .single()
-
-      if (error) throw error
-      
-      setSession(data)
-      router.push('/studio/goal')
-    } catch (error: any) {
-      console.error('Error creating session:', error)
-      toast.error(error.message || 'Failed to create session')
-    } finally {
-      setIsLoading(false)
-    }
+    router.push('/studio/role')
   }
 
   return (
@@ -44,8 +20,8 @@ export default function WelcomeScreen() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" 
-            alt="Golf cart" 
+            src="https://images.unsplash.com/photo-1593111774648-63562bf86e78?w=1200&auto=format&fit=crop&q=80" 
+            alt="Golf cart on scenic fairway" 
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-black/20" />
@@ -69,12 +45,21 @@ export default function WelcomeScreen() {
 
           {/* Single CTA */}
           <button
-            onClick={() => router.push('/studio/role')}
+            onClick={handleGetStarted}
             disabled={isLoading}
             className="w-full sm:w-auto px-8 h-14 rounded-xl bg-white text-emerald-950 font-semibold text-base hover:bg-stone-100 transition-all shadow-lg shadow-black/20 flex items-center justify-center gap-2"
           >
-            Get Started
-            <ArrowRight size={20} />
+            {isLoading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Get Started
+                <ArrowRight size={20} />
+              </>
+            )}
           </button>
         </div>
       </div>
