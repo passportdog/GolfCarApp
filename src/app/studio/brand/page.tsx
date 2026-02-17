@@ -1,11 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { Lock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useState, useEffect } from 'react'
+import { useState as useStateReact, useEffect as useEffectReact } from 'react'
 
 const LOCATIONS = [
   'The Villages (Main)',
@@ -18,13 +19,13 @@ const CTAS = ['Call Us', 'Text Us', 'Visit Web']
 export default function BrandPage() {
   const router = useRouter()
   const { session, userRole } = useStudio()
-  const [location, setLocation] = useState(LOCATIONS[0])
-  const [cta, setCta] = useState(CTAS[0])
-  const [promo, setPromo] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [location, setLocation] = useStateReact(LOCATIONS[0])
+  const [cta, setCta] = useStateReact(CTAS[0])
+  const [promo, setPromo] = useStateReact('')
+  const [isLoading, setIsLoading] = useStateReact(false)
   const supabase = createClient()
 
-  useEffect(() => {
+  useEffectReact(() => {
     if (!session) router.push('/studio')
   }, [session, router])
 
@@ -51,7 +52,8 @@ export default function BrandPage() {
         throw error
       }
 
-      router.push('/studio/upload')
+      // Go to Generate (NO photo yet - text-to-image first)
+      router.push('/studio/generate')
     } catch (error) {
       console.error('Error saving brand details:', error)
       toast.error('Failed to save details')
@@ -134,7 +136,7 @@ export default function BrandPage() {
           disabled={isLoading}
           className="w-full h-12 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-medium transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2"
         >
-          {isLoading ? <Loader2 size={20} className="animate-spin" /> : 'Continue to Upload'}
+          {isLoading ? <Loader2 size={20} className="animate-spin" /> : 'Continue'}
         </button>
       </div>
 

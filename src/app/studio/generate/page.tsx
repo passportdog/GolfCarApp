@@ -16,7 +16,7 @@ const LOADING_MESSAGES = [
 
 export default function GeneratePage() {
   const router = useRouter()
-  const { session, selectedPack, uploadedPhoto } = useStudio()
+  const { session, selectedPack, uploadedPhoto, setGeneration } = useStudio()
   const [messageIndex, setMessageIndex] = useState(0)
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export default function GeneratePage() {
   const generateImage = async () => {
     if (!session) return
     try {
+      // Call the edge function — uploadedPhoto is optional (null for first-time browse)
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-image`,
         {
@@ -83,11 +84,12 @@ export default function GeneratePage() {
 
           if (gen.status === 'completed') {
             clearInterval(pollInterval)
+            setGeneration(gen)
             router.push('/studio/results')
           } else if (gen.status === 'failed') {
             clearInterval(pollInterval)
             toast.error(gen.error_message || 'Generation failed')
-            router.push('/studio/upload')
+            router.push('/studio/brand')
           }
         } catch (error) {
           console.error('Error polling:', error)
