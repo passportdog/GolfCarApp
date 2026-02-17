@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
-import { createClient } from '@/lib/supabase'
 import { GolfCartIcon } from '@/components/icons'
 import { toast } from 'sonner'
 
@@ -20,14 +19,13 @@ export default function GeneratePage() {
   const { session, selectedPack, uploadedPhoto } = useStudio()
   const [messageIndex, setMessageIndex] = useState(0)
 
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
-
   useEffect(() => {
+    if (!session) {
+      router.push('/studio')
+      return
+    }
     generateImage()
-  }, [])
+  }, [session, router])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,8 +35,8 @@ export default function GeneratePage() {
   }, [])
 
   const generateImage = async () => {
+    if (!session) return
     try {
-      // Call the edge function
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-image`,
         {
@@ -63,7 +61,6 @@ export default function GeneratePage() {
 
       const { generation_id } = await response.json()
 
-      // Poll for completion
       const pollInterval = setInterval(async () => {
         try {
           const checkResponse = await fetch(
@@ -104,9 +101,10 @@ export default function GeneratePage() {
     }
   }
 
+  if (!session) return null
+
   return (
     <div className="h-full w-full flex flex-col items-center justify-center relative p-8 text-center bg-stone-50">
-      {/* Loading Graphic */}
       <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
         <div className="absolute inset-0 border-4 border-emerald-100 rounded-full" />
         <div className="absolute inset-0 border-4 border-emerald-600 rounded-full border-t-transparent animate-spin" />

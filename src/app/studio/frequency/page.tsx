@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
@@ -17,14 +18,14 @@ export default function FrequencyPage() {
   const { session } = useStudio()
   const supabase = createClient()
 
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
+  useEffect(() => {
+    if (!session) router.push('/studio')
+  }, [session, router])
+
+  if (!session) return null
 
   const selectFrequency = async (freqId: string) => {
     try {
-      // Store frequency in metadata
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error

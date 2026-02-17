@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
-import { createClient } from '@/lib/supabase'
 import { Generation } from '@/lib/types'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,19 +12,19 @@ export default function ResultsPage() {
   const { session } = useStudio()
   const [generations, setGenerations] = useState<Generation[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
-
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
 
   useEffect(() => {
+    if (!session) {
+      router.push('/studio')
+      return
+    }
     fetchGenerations()
-  }, [])
+  }, [session, router])
 
   const fetchGenerations = async () => {
+    if (!session) return
     try {
+      const supabase = (await import('@/lib/supabase')).createClient()
       const { data, error } = await supabase
         .from('generations')
         .select('*')
@@ -48,7 +47,7 @@ export default function ResultsPage() {
     router.push(`/studio/edit?id=${generationId}`)
   }
 
-  if (isLoading) {
+  if (isLoading || !session) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-emerald-600" />
@@ -58,7 +57,6 @@ export default function ResultsPage() {
 
   return (
     <div className="h-full w-full flex flex-col bg-stone-50">
-      {/* Filter Bar */}
       <div className="flex-none px-6 py-4 flex items-center justify-between border-b border-stone-200 bg-white z-10">
         <div className="flex gap-2">
           <button className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100 text-xs font-semibold">
@@ -73,10 +71,8 @@ export default function ResultsPage() {
         </button>
       </div>
 
-      {/* Grid */}
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
         {generations.length === 0 ? (
-          // Mock results for demo
           <>
             <button 
               onClick={() => handleSelect('mock1')}

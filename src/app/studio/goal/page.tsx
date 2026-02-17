@@ -5,16 +5,18 @@ import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { ArrowRight, Tag, Camera, Users, Wrench } from 'lucide-react'
 import { toast } from 'sonner'
+import { useEffect } from 'react'
 
+// Goal IDs must match DB constraint: social_post, inventory_photo, promo_content, personal_share
 const ROLE_GOALS = {
   employee: [
-    { id: 'inventory', icon: <Tag size={20} />, title: 'New Inventory', desc: 'Showroom units & arrivals' },
-    { id: 'sale', icon: <Tag size={20} />, title: 'Sale / Promo', desc: 'Price drops and offers' },
-    { id: 'service', icon: <Wrench size={20} />, title: 'Service Special', desc: 'Maintenance promos' },
+    { id: 'inventory_photo', icon: <Tag size={20} />, title: 'New Inventory', desc: 'Showroom units & arrivals' },
+    { id: 'promo_content', icon: <Tag size={20} />, title: 'Sale / Promo', desc: 'Price drops and offers' },
+    { id: 'social_post', icon: <Wrench size={20} />, title: 'Service Special', desc: 'Maintenance promos' },
   ],
   customer: [
-    { id: 'showcase', icon: <Camera size={20} />, title: 'My Cart Showcase', desc: 'Show off your ride' },
-    { id: 'community', icon: <Users size={20} />, title: 'Community Life', desc: 'Course & neighborhood' },
+    { id: 'personal_share', icon: <Camera size={20} />, title: 'My Cart Showcase', desc: 'Show off your ride' },
+    { id: 'social_post', icon: <Users size={20} />, title: 'Community Life', desc: 'Course & neighborhood' },
   ],
 }
 
@@ -23,16 +25,16 @@ export default function GoalPage() {
   const { session, userRole, setGoal } = useStudio()
   const supabase = createClient()
 
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
+  useEffect(() => {
+    if (!session) router.push('/studio')
+  }, [session, router])
+
+  if (!session) return null
 
   const goals = userRole ? ROLE_GOALS[userRole] : []
 
   const selectGoal = async (goalId: string) => {
     try {
-      // Update metadata with goal
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error

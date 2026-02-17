@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
@@ -15,10 +15,11 @@ export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
+  useEffect(() => {
+    if (!session) router.push('/studio')
+  }, [session, router])
+
+  if (!session) return null
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -71,7 +72,6 @@ export default function UploadPage() {
       setUploadedPhoto(photoData)
       toast.success('Photo added!')
       
-      // Go to generating screen
       setTimeout(() => {
         router.push('/studio/generate')
       }, 500)
@@ -106,7 +106,6 @@ export default function UploadPage() {
           <span className="text-xs text-stone-400 mt-2">JPG, PNG supported</span>
         </div>
 
-        {/* Progress Bar */}
         {isUploading && (
           <div className="absolute bottom-0 left-0 h-1.5 bg-emerald-500 w-full animate-pulse"></div>
         )}

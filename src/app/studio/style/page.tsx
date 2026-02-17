@@ -12,7 +12,7 @@ const PACK_IMAGES: Record<string, string> = {
   'showroom-clean': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg',
   'fairway-lifestyle': 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=600&auto=format&fit=crop',
   'neighborhood-ready': 'https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg',
-  'inventory-lineup': '', // Will use placeholder
+  'inventory-lineup': '',
 }
 
 export default function StylePage() {
@@ -23,15 +23,15 @@ export default function StylePage() {
   const supabase = createClient()
 
   useEffect(() => {
+    if (!session) {
+      router.push('/studio')
+      return
+    }
     fetchStylePacks()
-  }, [])
-
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
+  }, [session, router])
 
   const fetchStylePacks = async () => {
+    if (!session) return
     try {
       const { data, error } = await supabase
         .from('style_packs')
@@ -52,6 +52,7 @@ export default function StylePage() {
   }
 
   const selectPack = async (pack: StylePack) => {
+    if (!session) return
     try {
       const { error } = await supabase
         .from('sessions')
@@ -69,7 +70,7 @@ export default function StylePage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || !session) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-emerald-600" />

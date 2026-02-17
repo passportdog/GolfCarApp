@@ -5,7 +5,7 @@ import { useStudio } from '@/lib/context'
 import { createClient } from '@/lib/supabase'
 import { Lock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const LOCATIONS = [
   'The Villages (Main)',
@@ -24,15 +24,15 @@ export default function BrandPage() {
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
-  if (!session) {
-    router.push('/studio')
-    return null
-  }
+  useEffect(() => {
+    if (!session) router.push('/studio')
+  }, [session, router])
+
+  if (!session) return null
 
   const handleContinue = async () => {
     setIsLoading(true)
     try {
-      // Store brand details in metadata
       const { error } = await supabase
         .from('sessions')
         // @ts-expect-error
